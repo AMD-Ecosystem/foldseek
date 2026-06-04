@@ -21,7 +21,7 @@ if(ENABLE_PROSTT5)
         target_compile_definitions(foldseek-framework PUBLIC -DHAVE_PROSTT5=1)
 endif()
 
-if(ENABLE_CUDA)
+if(ENABLE_CUDA OR USE_HIP)
         target_compile_definitions(foldseek-framework PUBLIC -DHAVE_CUDA=1)
 endif()
 

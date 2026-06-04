@@ -25,6 +25,19 @@
     #define SDIV(x,y)(((x)+(y)-1)/(y))
 #endif
 
+// Device execution policy: rocThrust uses thrust::hip (defined by the HIP
+// compat header); the CUDA build uses thrust::cuda.
+#ifndef THRUST_DEVICE_PAR_NOSYNC
+    #define THRUST_DEVICE_PAR_NOSYNC thrust::cuda::par_nosync
+#endif
+
+// Full-warp shuffle mask: 32-bit on CUDA, set per-lane to 64-bit by the HIP
+// compat header.
+#ifndef WARP_FULL_MASK
+    #define WARP_FULL_MASK 0xFFFFFFFFu
+    typedef unsigned int WarpMaskT;
+#endif
+
 namespace helpers {
 
     inline

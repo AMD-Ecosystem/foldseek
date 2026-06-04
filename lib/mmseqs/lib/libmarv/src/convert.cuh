@@ -7,7 +7,7 @@
 namespace cudasw4{
 
 struct ConvertAA_20{
-    #ifdef __CUDACC__
+    #if defined(__CUDACC__) || defined(__HIPCC__)
     __host__ __device__
     #endif
     char operator()(const char& AA) {
@@ -43,7 +43,7 @@ struct ConvertAA_20{
 };
 
 struct InverseConvertAA_20{
-    #ifdef __CUDACC__
+    #if defined(__CUDACC__) || defined(__HIPCC__)
     __host__ __device__
     #endif
     char operator()(const char& AA) {
@@ -75,7 +75,7 @@ struct InverseConvertAA_20{
 
 
 struct ConvertAA_20_CaseSensitive{
-    #ifdef __CUDACC__
+    #if defined(__CUDACC__) || defined(__HIPCC__)
     __host__ __device__
     #endif
     char operator()(const char& AA) {
@@ -133,7 +133,7 @@ struct ConvertAA_20_CaseSensitive{
 };
 
 struct InverseConvertAA_20_CaseSensitive{
-    #ifdef __CUDACC__
+    #if defined(__CUDACC__) || defined(__HIPCC__)
     __host__ __device__
     #endif
     char operator()(const char& AA) {
@@ -184,7 +184,7 @@ struct InverseConvertAA_20_CaseSensitive{
 };
 
 struct CaseSensitive_to_CaseInsensitive{
-    #ifdef __CUDACC__
+    #if defined(__CUDACC__) || defined(__HIPCC__)
     __host__ __device__
     #endif
     char operator()(const char& AA) {
@@ -192,7 +192,7 @@ struct CaseSensitive_to_CaseInsensitive{
     }
 
     //vectorized for 4 values packed in a single int
-    #ifdef __CUDACC__
+    #if defined(__CUDACC__) || defined(__HIPCC__)
     __host__ __device__
     #endif
     unsigned int operator()(const unsigned int& packed4) {
@@ -205,7 +205,7 @@ struct CaseSensitive_to_CaseInsensitive{
     Map lower-case encoded letters to "invalid letter"
 */
 struct ClampToInvalid{
-    #ifdef __CUDACC__
+    #if defined(__CUDACC__) || defined(__HIPCC__)
     __host__ __device__
     #endif
     char operator()(const char& AA) {
@@ -213,7 +213,7 @@ struct ClampToInvalid{
     }
 
     //vectorized for 4 values packed in a single int
-    #ifdef __CUDACC__
+    #if defined(__CUDACC__) || defined(__HIPCC__)
     __device__
     #endif
     unsigned int operator()(const unsigned int& packed4) {
@@ -221,6 +221,18 @@ struct ClampToInvalid{
 
         constexpr unsigned int mask20 = 0x14141414; // decimal 20 per byte
         return __vminu4(packed4, mask20);
+
+        #elif defined(__HIP_DEVICE_COMPILE__)
+
+        // ROCm has no __vminu4; clamp each byte to 20 with scalar ops.
+        unsigned int result = 0;
+        #pragma unroll
+        for(int b = 0; b < 4; ++b){
+            unsigned int v = (packed4 >> (8 * b)) & 0xFFu;
+            v = v < 20u ? v : 20u;
+            result |= v << (8 * b);
+        }
+        return result;
 
         #else
 
@@ -244,7 +256,7 @@ struct ClampToInvalid{
 
 
 struct ConvertAA_20_mmseqs_to_ncbi{
-    #ifdef __CUDACC__
+    #if defined(__CUDACC__) || defined(__HIPCC__)
     __host__ __device__
     #endif
     char operator()(const char& encodedAA) {
@@ -280,7 +292,7 @@ struct ConvertAA_20_mmseqs_to_ncbi{
 };
 
 struct ConvertAA_20_ncbi_to_mmseqs{
-    #ifdef __CUDACC__
+    #if defined(__CUDACC__) || defined(__HIPCC__)
     __host__ __device__
     #endif
     char operator()(const char& encodedAA) {

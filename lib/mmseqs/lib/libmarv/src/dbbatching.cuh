@@ -82,7 +82,7 @@ namespace cudasw4{
                 stream
             ); CUERR;
             thrust::for_each(
-                thrust::cuda::par_nosync.on(stream),
+                THRUST_DEVICE_PAR_NOSYNC.on(stream),
                 d_offsetdata + usedSeq,
                 d_offsetdata + usedSeq + (numToCopy+1),
                 [
@@ -227,7 +227,7 @@ namespace cudasw4{
         );
     
         thrust::inclusive_scan(
-            thrust::cuda::par_nosync(thrust_async_allocator<char>(H2DcopyStream)).on(H2DcopyStream),
+            THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(H2DcopyStream)).on(H2DcopyStream),
             d_paddedLengths,
             d_paddedLengths + plan.usedSeq,
             d_offsetdata + 1
