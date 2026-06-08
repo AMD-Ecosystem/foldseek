@@ -76,6 +76,13 @@ if(USE_HIP)
     )
     set_target_properties(marv PROPERTIES POSITION_INDEPENDENT_CODE ON)
     target_compile_options(marv PRIVATE $<$<COMPILE_LANGUAGE:HIP>:${HIP_FLAGS}>)
+    # On Windows (MSVC-ABI clang), CMake adds -fuse-ld=lld-link to the HIP
+    # link command via CMAKE_HIP_USING_LINKER_DEFAULT. clang rejects that flag
+    # when --hip-link is present (clang-linker-wrapper takes over from the
+    # driver). Clear the default so clang-linker-wrapper picks lld-link on its own.
+    if(WIN32)
+        set(CMAKE_HIP_USING_LINKER_DEFAULT "")
+    endif()
     target_link_options(marv PRIVATE -fgpu-rdc --hip-link)
 else()
     add_library(marv ${ALIGN_SOURCES} marv.cu marv.h)
@@ -86,7 +93,7 @@ else()
             CUDA_RESOLVE_DEVICE_SYMBOLS ON
     )
 endif()
-target_compile_definitions(marv PRIVATE NO_NVTOOLSEXT)
+target_compile_definitions(marv PRIVATE NO_NVTOOLSEXT $<$<BOOL:${WIN32}>:MARV_BUILDING_DLL>)
 
 if (NOT LIBRARY_ONLY)
     find_package(CUDAToolkit REQUIRED)

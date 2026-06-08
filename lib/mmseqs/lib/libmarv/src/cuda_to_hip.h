@@ -10,6 +10,29 @@
 // on AMD (see the kernel-config selectors), but its template instantiations
 // are still compiled, so the intrinsics must exist as valid device code.
 
+// On Windows, <windows.h> defines min/max as function-like macros which break
+// C++ standard library uses of std::numeric_limits<T>::max() etc. Suppress them.
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#endif
+
+// On ROCm 7.14+, <amd_hip_bf16.h> defines __shfl_*_sync bfloat16 overloads that
+// conflict with this header's own warp-sync shuffle definitions, causing a clang
+// "redefinition of default argument" error; HIP_DISABLE_WARP_SYNC_BUILTINS
+// suppresses the runtime's builtins so ours win. On ROCm 7.2.x those overloads
+// and __syncwarp (used in kernels.cuh) live behind the SAME guard, so defining
+// it there would strip __syncwarp and break the build; the flag must be set on
+// 7.14+ only. Key it on the HIP runtime version, not the OS.
+#include <hip/hip_version.h>
+#if defined(HIP_VERSION) && (HIP_VERSION_MAJOR > 7 || (HIP_VERSION_MAJOR == 7 && HIP_VERSION_MINOR >= 14))
+#  define HIP_DISABLE_WARP_SYNC_BUILTINS
+#endif
+
 #include <cstring>
 #include <cstdlib>
 
@@ -23,9 +46,16 @@
 #endif
 
 // HIP __shfl_*_sync require a 64-bit lane mask (one bit per wavefront lane);
-// the CUDA sources use the 32-bit 0xFFFFFFFF full-warp mask.
+// the CUDA sources use the 32-bit 0xFFFFFFFF full-warp mask. Additionally,
+// when HIP_DISABLE_WARP_SYNC_BUILTINS is set (ROCm 7.14+) the masked-sync
+// builtins are suppressed entirely; map them to the maskless HIP equivalents.
 #define WARP_FULL_MASK 0xFFFFFFFFFFFFFFFFull
 typedef unsigned long long WarpMaskT;
+
+#define __shfl_sync(mask, ...)      __shfl(__VA_ARGS__)
+#define __shfl_up_sync(mask, ...)   __shfl_up(__VA_ARGS__)
+#define __shfl_down_sync(mask, ...) __shfl_down(__VA_ARGS__)
+#define __shfl_xor_sync(mask, ...)  __shfl_xor(__VA_ARGS__)
 
 // CUB's RAII device switcher has no hipCUB equivalent; provide it in namespace
 // cub for the single use site.
