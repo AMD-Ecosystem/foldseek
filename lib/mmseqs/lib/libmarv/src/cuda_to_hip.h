@@ -2,7 +2,7 @@
 #define LIBMARV_CUDA_TO_HIP_H
 
 // Compatibility shim that lets the libmarv CUDA sources build under ROCm/HIP
-// while keeping the NVIDIA build byte-identical (this header is only force
+// while keeping the NVIDIA build unchanged (this header is only force
 // included on the HIP compile). It maps the CUDA runtime/Thrust/CUB spellings
 // the library uses to their HIP equivalents and supplies the small set of
 // device intrinsics ROCm 7.2.x does not provide (packed-fp16 max and the
