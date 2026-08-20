@@ -1004,7 +1004,11 @@ int peakbenchmarkAllSingleTileConfigs(int argc, char* argv[]){
 
         int ccMajor = 0;
         cudaDeviceGetAttribute(&ccMajor, cudaDevAttrComputeCapabilityMajor, 0);
+#ifdef __HIPCC__
+        const bool supportsDPX = false; // DPX is NVIDIA-only; AMD runs the portable path
+#else
         const bool supportsDPX = ccMajor >= 9;
+#endif
         if(supportsDPX){
             auto resultDpx = execute("", kernelApproach, true);
             allBenchmarkData.insert(allBenchmarkData.end(), resultDpx.begin(), resultDpx.end());

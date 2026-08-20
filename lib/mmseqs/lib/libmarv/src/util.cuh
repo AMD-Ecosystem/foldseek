@@ -188,13 +188,13 @@ struct TopNMaximaArray{
 
     void setAllScoresToZero(cudaStream_t stream){
         thrust::fill(
-            thrust::cuda::par_nosync.on(stream),
+            THRUST_DEVICE_PAR_NOSYNC.on(stream),
             d_scores,
             d_scores + size,
             0
         );
         thrust::sequence(
-            thrust::cuda::par_nosync.on(stream),
+            THRUST_DEVICE_PAR_NOSYNC.on(stream),
             d_indices,
             d_indices + size,
             ReferenceIdT(0)
@@ -246,19 +246,19 @@ struct TopNMaximaArrayWithExtra{
 
     void setAllScoresToZero(cudaStream_t stream){
         thrust::fill(
-            thrust::cuda::par_nosync.on(stream),
+            THRUST_DEVICE_PAR_NOSYNC.on(stream),
             d_scores,
             d_scores + size,
             0
         );
         thrust::sequence(
-            thrust::cuda::par_nosync.on(stream),
+            THRUST_DEVICE_PAR_NOSYNC.on(stream),
             d_indices,
             d_indices + size,
             ReferenceIdT(0)
         );
         thrust::fill(
-            thrust::cuda::par_nosync.on(stream),
+            THRUST_DEVICE_PAR_NOSYNC.on(stream),
             d_extras,
             d_extras + size,
             ExtraData{}

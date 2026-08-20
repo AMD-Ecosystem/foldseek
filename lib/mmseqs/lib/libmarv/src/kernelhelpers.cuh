@@ -1,4 +1,5 @@
 #include <type_traits>
+#include "hpc_helpers/hpc_helpers.h"
 
 namespace cudasw4{
 
@@ -21,11 +22,11 @@ namespace cudasw4{
 
     template<class T, std::enable_if_t<(sizeof(T) <= 4), bool> = true>
     __device__
-    T warp_max_reduce_broadcast(unsigned int mask, T val){
-        #if __CUDA_ARCH__ >= 800
+    T warp_max_reduce_broadcast(WarpMaskT mask, T val){
+        #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 800
             return __reduce_max_sync(mask, val);
         #else
-            for (int offset = 16; offset > 0; offset /= 2){
+            for (int offset = warpSize / 2; offset > 0; offset /= 2){
                 T tmp = __shfl_down_sync(mask, val, offset);
                 val = tmp > val ? tmp : val;
             }
@@ -35,8 +36,8 @@ namespace cudasw4{
 
     template<class T, std::enable_if_t<(sizeof(T) > 4), bool> = true>
     __device__
-    T warp_max_reduce_broadcast(unsigned int mask, T val){
-        for (int offset = 16; offset > 0; offset /= 2){
+    T warp_max_reduce_broadcast(WarpMaskT mask, T val){
+        for (int offset = warpSize / 2; offset > 0; offset /= 2){
             T tmp = __shfl_down_sync(mask, val, offset);
             val = tmp > val ? tmp : val;
         }
@@ -77,14 +78,14 @@ namespace cudasw4{
         return(d.s2);
     }
 
-    inline __device__ short2 shfl_up_2xint16(const uint32_t bitmap, const short2 value, const int lane, const int group_size) {
+    inline __device__ short2 shfl_up_2xint16(const WarpMaskT bitmap, const short2 value, const int lane, const int group_size) {
         score_pack v, res;
         v.s2 = value;
         res.u =__shfl_up_sync(bitmap, v.u, lane, group_size);
         return(res.s2);
     }
 
-    inline __device__ short2 shfl_down_2xint16(const uint32_t bitmap, const short2 value, const int lane, const int group_size) {
+    inline __device__ short2 shfl_down_2xint16(const WarpMaskT bitmap, const short2 value, const int lane, const int group_size) {
         score_pack v, res;
         v.s2 = value;
         res.u =__shfl_down_sync(bitmap, v.u, lane, group_size);

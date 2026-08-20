@@ -68,7 +68,7 @@ void __launch_bounds__(256,2) GaplessFilter_row_wise_many_pass_half2(
 
 
     const SequenceLengthT length = max(length_S0, length_S1);
-    //const int length = __reduce_max_sync(0xFFFFFFFF, temp_length);
+    //const int length = __reduce_max_sync(WARP_FULL_MASK, temp_length);
 
     __half2 H_temp_out{}, H_temp_in{};
     __half2 penalty_temp0, penalty_temp1;
@@ -148,7 +148,7 @@ void __launch_bounds__(256,2) GaplessFilter_row_wise_many_pass_half2(
 
 
     auto shuffle_affine_penalty = [&](const auto& new_penalty_diag) {
-        penalty_diag = __shfl_up_sync(0xFFFFFFFF, penalty_here_array[numRegs-1], 1, 32);
+        penalty_diag = __shfl_up_sync(WARP_FULL_MASK, penalty_here_array[numRegs-1], 1, 32);
         if (!group_id) {
             penalty_diag = new_penalty_diag;
         }
@@ -156,12 +156,12 @@ void __launch_bounds__(256,2) GaplessFilter_row_wise_many_pass_half2(
 
 
     auto shuffle_H_temp_out = [&]() {
-        const int temp = __shfl_down_sync(0xFFFFFFFF, *((int*)(&H_temp_out)), 1, 32);
+        const int temp = __shfl_down_sync(WARP_FULL_MASK, *((int*)(&H_temp_out)), 1, 32);
         H_temp_out = *((half2*)(&temp));
     };
 
     auto shuffle_H_temp_in = [&]() {
-        const int temp = __shfl_down_sync(0xFFFFFFFF, *((int*)(&H_temp_in)), 1, 32);
+        const int temp = __shfl_down_sync(WARP_FULL_MASK, *((int*)(&H_temp_in)), 1, 32);
         H_temp_in = *((half2*)(&temp));
     };
 
@@ -419,7 +419,7 @@ void __launch_bounds__(256,2) GaplessFilter_row_wise_many_pass_half2(
 
     //group-wide max-reduce
     for (int offset=group_size/2; offset>0; offset/=2){
-        maximum = __hmax2(maximum,__shfl_down_sync(0xFFFFFFFF,maximum,offset,group_size));
+        maximum = __hmax2(maximum,__shfl_down_sync(WARP_FULL_MASK,maximum,offset,group_size));
     }
 
     if (!group_id) {
@@ -536,7 +536,7 @@ void __launch_bounds__(256,2) GaplessFilter_row_wise_half2(
 	}
 
 	SequenceLengthT temp_length = max(length_S0, length_S1);
-    const SequenceLengthT length = warp_max_reduce_broadcast(0xFFFFFFFF, temp_length);
+    const SequenceLengthT length = warp_max_reduce_broadcast(WARP_FULL_MASK, temp_length);
 
     __half2 penalty_temp0, penalty_temp1;
     __half2 penalty_here_array[numRegs];
@@ -602,7 +602,7 @@ void __launch_bounds__(256,2) GaplessFilter_row_wise_half2(
 
 
     auto shuffle_affine_penalty = [&]() {
-        penalty_diag = __shfl_up_sync(0xFFFFFFFF, penalty_here_array[numRegs-1], 1, 32);
+        penalty_diag = __shfl_up_sync(WARP_FULL_MASK, penalty_here_array[numRegs-1], 1, 32);
         if (!group_id) penalty_diag = ZERO;
     };
 
@@ -650,7 +650,7 @@ void __launch_bounds__(256,2) GaplessFilter_row_wise_half2(
 
     //group-wide max-reduce
     for (int offset=group_size/2; offset>0; offset/=2){
-	    maximum = __hmax2(maximum,__shfl_down_sync(0xFFFFFFFF,maximum,offset,group_size));
+	    maximum = __hmax2(maximum,__shfl_down_sync(WARP_FULL_MASK,maximum,offset,group_size));
     }
 
     if (!group_id) {
@@ -813,7 +813,7 @@ void __launch_bounds__(32,16) GaplessFilter_float_many_pass(
     };
 
     auto shuffle_affine_penalty = [&](const auto& new_penalty_diag) {
-        penalty_diag = __shfl_up_sync(0xFFFFFFFF, penalty_here_array[numRegs-1], 1, 32);
+        penalty_diag = __shfl_up_sync(WARP_FULL_MASK, penalty_here_array[numRegs-1], 1, 32);
         if (!group_id) {
             penalty_diag = new_penalty_diag;
         }
@@ -821,12 +821,12 @@ void __launch_bounds__(32,16) GaplessFilter_float_many_pass(
 
 
     auto shuffle_H_temp_out = [&]() {
-        const double temp0 = __shfl_down_sync(0xFFFFFFFF, *((double*)(&H_temp_out)), 1, 32);
+        const double temp0 = __shfl_down_sync(WARP_FULL_MASK, *((double*)(&H_temp_out)), 1, 32);
         H_temp_out = *((float2*)(&temp0));
     };
 
     auto shuffle_H_temp_in = [&]() {
-        const double temp0 = __shfl_down_sync(0xFFFFFFFF, *((double*)(&H_temp_in)), 1, 32);
+        const double temp0 = __shfl_down_sync(WARP_FULL_MASK, *((double*)(&H_temp_in)), 1, 32);
         H_temp_in = *((float2*)(&temp0));
     };
 
@@ -1109,7 +1109,7 @@ void __launch_bounds__(32,16) GaplessFilter_float_many_pass(
 
     //group-wide max-reduce
     for (int offset=group_size/2; offset>0; offset/=2){
-        maximum = max(maximum,__shfl_down_sync(0xFFFFFFFF,maximum,offset,group_size));
+        maximum = max(maximum,__shfl_down_sync(WARP_FULL_MASK,maximum,offset,group_size));
     }
     if (!group_id){
         devAlignmentScores[d_positions_of_selected_lengths[blid]] =  maximum;

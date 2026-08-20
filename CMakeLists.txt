@@ -10,6 +10,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/mmseqs/cmake")
 
 set(ENABLE_PROSTT5 1 CACHE BOOL "Enable ProstT5")
 set(ENABLE_CUDA 0 CACHE BOOL "Enable CUDA")
+set(USE_HIP 0 CACHE BOOL "Enable the GPU aligner with HIP for AMD ROCm")
 set(FORCE_STATIC_DEPS 0 CACHE BOOL "Force static linking of deps")
 
 if(FORCE_STATIC_DEPS)

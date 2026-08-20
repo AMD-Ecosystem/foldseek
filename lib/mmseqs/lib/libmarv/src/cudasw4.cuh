@@ -580,7 +580,7 @@ namespace cudasw4{
             }
         
             void resetMaxReduceArray(cudaStream_t stream){
-                thrust::fill(thrust::cuda::par_nosync.on(stream),
+                thrust::fill(THRUST_DEVICE_PAR_NOSYNC.on(stream),
                     d_maxReduceArrayScores.data(),
                     d_maxReduceArrayScores.data() + maxReduceArraySize,
                     -1.f
@@ -604,7 +604,7 @@ namespace cudasw4{
             }
 
             void resetTopNArrays(cudaStream_t stream){
-                thrust::fill(thrust::cuda::par_nosync.on(stream),
+                thrust::fill(THRUST_DEVICE_PAR_NOSYNC.on(stream),
                     d_topN_scores.data(),
                     d_topN_scores.data() + d_topN_scores.size(),
                     -1.f
@@ -1896,7 +1896,7 @@ namespace cudasw4{
 
                 if constexpr(!QueryView::isEncoded){
                     thrust::transform(
-                        thrust::cuda::par_nosync.on(gpuStreams[gpu]),
+                        THRUST_DEVICE_PAR_NOSYNC.on(gpuStreams[gpu]),
                         ws.d_query.data(),
                         ws.d_query.data() + currentQueryLength,
                         ws.d_query.data(),
@@ -2019,7 +2019,7 @@ namespace cudasw4{
             // scanTimer->start();
 
             thrust::fill(
-                thrust::cuda::par_nosync.on(masterStream1),
+                THRUST_DEVICE_PAR_NOSYNC.on(masterStream1),
                 d_finalAlignmentScores_allGpus.begin(),
                 d_finalAlignmentScores_allGpus.end(),
                 0
@@ -2093,14 +2093,14 @@ namespace cudasw4{
                     d_finalReferenceIds_allGpus.begin()
                 );
                 thrust::sort(
-                    thrust::cuda::par_nosync(thrust_async_allocator<char>(masterStream1)).on(masterStream1),
+                    THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(masterStream1)).on(masterStream1),
                     sortInput,
                     sortInput + results_per_query * numGpus,
                     CompareScoresDescendingRefIdsAscending{}
                 );
 
                 // thrust::sort_by_key(
-                //     thrust::cuda::par_nosync(thrust_async_allocator<char>(masterStream1)).on(masterStream1),
+                //     THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(masterStream1)).on(masterStream1),
                 //     d_finalAlignmentScores_allGpus.begin(),
                 //     d_finalAlignmentScores_allGpus.begin() + results_per_query * numGpus,
                 //     d_finalReferenceIds_allGpus.begin(),
@@ -2157,7 +2157,7 @@ namespace cudasw4{
             // scanTimer->start();
 
             thrust::fill(
-                thrust::cuda::par_nosync.on(masterStream1),
+                THRUST_DEVICE_PAR_NOSYNC.on(masterStream1),
                 d_finalAlignmentScores_allGpus.begin(),
                 d_finalAlignmentScores_allGpus.end(),
                 0
@@ -2284,7 +2284,7 @@ namespace cudasw4{
                         d_finalReferenceIds_allGpus.begin()
                     );
                     thrust::sort_by_key(
-                        thrust::cuda::par_nosync(thrust_async_allocator<char>(masterStream1)).on(masterStream1),
+                        THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(masterStream1)).on(masterStream1),
                         sortInputKeys,
                         sortInputKeys + results_per_query * numGpus,
                         d_finalEndPositions_allGpus.begin(),
@@ -2292,7 +2292,7 @@ namespace cudasw4{
                     );
 
                     // thrust::sort_by_key(
-                    //     thrust::cuda::par_nosync(thrust_async_allocator<char>(masterStream1)).on(masterStream1),
+                    //     THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(masterStream1)).on(masterStream1),
                     //     d_finalAlignmentScores_allGpus.begin(),
                     //     d_finalAlignmentScores_allGpus.begin() + results_per_query * numGpus,
                     //     thrust::make_zip_iterator(
@@ -2669,7 +2669,7 @@ namespace cudasw4{
 
                                     //db sequences are processed in ascending order. stable sort ensures that sequences with same score are sorted by ascending id without a custom comparator
                                     thrust::stable_sort_by_key(
-                                        thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                                        THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                                         ws.d_maxReduceArrayScores.data(),
                                         ws.d_maxReduceArrayScores.data() + numInPass,
                                         ws.d_maxReduceArrayIndices.data(),
@@ -2690,7 +2690,7 @@ namespace cudasw4{
                                             ws.d_topN_refIds_tmp.data()
                                         );
                                         thrust::merge(
-                                            thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                                            THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                                             mergeInput1,
                                             mergeInput1 + std::min(numInPass, size_t(results_per_query)),
                                             mergeInput2,
@@ -2737,7 +2737,7 @@ namespace cudasw4{
                                     );
 
                                     thrust::stable_sort_by_key(
-                                        thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                                        THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                                         ws.d_maxReduceArrayScores.data(),
                                         ws.d_maxReduceArrayScores.data() + numInPass,
                                         thrust::make_zip_iterator(
@@ -2764,7 +2764,7 @@ namespace cudasw4{
                                             ws.d_topN_alignmentEndPositions_tmp.data()
                                         );
                                         thrust::merge(
-                                            thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                                            THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                                             mergeInput1,
                                             mergeInput1 + std::min(numInPass, size_t(results_per_query)),
                                             mergeInput2,
@@ -2773,7 +2773,7 @@ namespace cudasw4{
                                             CompareScoresDescendingRefIdsAscending{}
                                         );
 
-                                        // thrust::merge_by_key(thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                                        // thrust::merge_by_key(THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                                         //     ws.d_maxReduceArrayScores.data(), 
                                         //     ws.d_maxReduceArrayScores.data() + std::min(numInPass, size_t(results_per_query)),
                                         //     ws.d_topN_scores.data(), 
@@ -2901,7 +2901,7 @@ namespace cudasw4{
                             );
                 
                             thrust::inclusive_scan(
-                                thrust::cuda::par_nosync(thrust_async_allocator<char>(ws.workStreamForTempUsage)).on(ws.workStreamForTempUsage),
+                                THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(ws.workStreamForTempUsage)).on(ws.workStreamForTempUsage),
                                 d_paddedLengths,
                                 d_paddedLengths + ws.getNumSequencesInCachedDB(),
                                 ws.d_cacheddb->getOffsetData() + 1
@@ -3029,7 +3029,7 @@ namespace cudasw4{
                         );
 
                         thrust::stable_sort_by_key(
-                            thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                            THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                             ws.d_maxReduceArrayScores.data(),
                             ws.d_maxReduceArrayScores.data() + numInPass,
                             ws.d_maxReduceArrayIndices.data(),
@@ -3050,7 +3050,7 @@ namespace cudasw4{
                                 ws.d_topN_refIds_tmp.data()
                             );
                             thrust::merge(
-                                thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                                THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                                 mergeInput1,
                                 mergeInput1 + std::min(numInPass, size_t(results_per_query)),
                                 mergeInput2,
@@ -3058,7 +3058,7 @@ namespace cudasw4{
                                 mergeOutput,
                                 CompareScoresDescendingRefIdsAscending{}
                             );
-                            // thrust::merge_by_key(thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                            // thrust::merge_by_key(THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                             //     ws.d_maxReduceArrayScores.data(), 
                             //     ws.d_maxReduceArrayScores.data() + std::min(numInPass, size_t(results_per_query)),
                             //     ws.d_topN_scores.data(), 
@@ -3114,7 +3114,7 @@ namespace cudasw4{
                         );
 
                         thrust::stable_sort_by_key(
-                            thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                            THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                             ws.d_maxReduceArrayScores.data(),
                             ws.d_maxReduceArrayScores.data() + numInPass,
                             thrust::make_zip_iterator(
@@ -3141,7 +3141,7 @@ namespace cudasw4{
                                 ws.d_topN_alignmentEndPositions_tmp.data()
                             );
                             thrust::merge(
-                                thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                                THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                                 mergeInput1,
                                 mergeInput1 + std::min(numInPass, size_t(results_per_query)),
                                 mergeInput2,
@@ -3149,7 +3149,7 @@ namespace cudasw4{
                                 mergeOutput,
                                 CompareScoresDescendingRefIdsAscending{}
                             );
-                            // thrust::merge_by_key(thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                            // thrust::merge_by_key(THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                             //     ws.d_maxReduceArrayScores.data(), 
                             //     ws.d_maxReduceArrayScores.data() + std::min(numInPass, size_t(results_per_query)),
                             //     ws.d_topN_scores.data(), 
@@ -3314,7 +3314,7 @@ namespace cudasw4{
                             );
 
                             thrust::stable_sort_by_key(
-                                thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                                THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                                 ws.d_maxReduceArrayScores.data(),
                                 ws.d_maxReduceArrayScores.data() + numInPass,
                                 ws.d_maxReduceArrayIndices.data(),
@@ -3336,7 +3336,7 @@ namespace cudasw4{
                                     ws.d_topN_refIds_tmp.data()
                                 );
                                 thrust::merge(
-                                    thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                                    THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                                     mergeInput1,
                                     mergeInput1 + std::min(numInPass, size_t(results_per_query)),
                                     mergeInput2,
@@ -3344,7 +3344,7 @@ namespace cudasw4{
                                     mergeOutput,
                                     CompareScoresDescendingRefIdsAscending{}
                                 );
-                                // thrust::merge_by_key(thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                                // thrust::merge_by_key(THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                                 //     ws.d_maxReduceArrayScores.data(), 
                                 //     ws.d_maxReduceArrayScores.data() + std::min(numInPass, size_t(results_per_query)),
                                 //     ws.d_topN_scores.data(), 
@@ -3400,7 +3400,7 @@ namespace cudasw4{
                             );
 
                             thrust::stable_sort_by_key(
-                                thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                                THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                                 ws.d_maxReduceArrayScores.data(),
                                 ws.d_maxReduceArrayScores.data() + numInPass,
                                 thrust::make_zip_iterator(
@@ -3427,7 +3427,7 @@ namespace cudasw4{
                                     ws.d_topN_alignmentEndPositions_tmp.data()
                                 );
                                 thrust::merge(
-                                    thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                                    THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                                     mergeInput1,
                                     mergeInput1 + std::min(numInPass, size_t(results_per_query)),
                                     mergeInput2,
@@ -3436,7 +3436,7 @@ namespace cudasw4{
                                     CompareScoresDescendingRefIdsAscending{}
                                 );
 
-                                // thrust::merge_by_key(thrust::cuda::par_nosync(thrust_async_allocator<char>(stream)).on(stream),
+                                // thrust::merge_by_key(THRUST_DEVICE_PAR_NOSYNC(thrust_async_allocator<char>(stream)).on(stream),
                                 //     ws.d_maxReduceArrayScores.data(), 
                                 //     ws.d_maxReduceArrayScores.data() + std::min(numInPass, size_t(results_per_query)),
                                 //     ws.d_topN_scores.data(), 

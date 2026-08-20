@@ -297,7 +297,13 @@ namespace cudasw4{
         cudaDeviceGetAttribute(&ccMinor, cudaDevAttrComputeCapabilityMinor, deviceId);
 
         std::vector<SmithWatermanKernelConfig> configs;
-        
+
+#ifdef __HIPCC__
+        // AMD reports compute-capability major 9; force the portable float
+        // config (dpx=0) instead of the NVIDIA-only DPX int path.
+        (void)ccMajor; (void)ccMinor;
+        configs = getOptimalKernelConfigs_SW_default();
+#else
         if(ccMajor == 7 && ccMinor == 5){
             configs = getOptimalKernelConfigs_SW_sm75();
         }else if(ccMajor == 8 && ccMinor == 0){
@@ -315,6 +321,7 @@ namespace cudasw4{
         }else{
             configs = getOptimalKernelConfigs_SW_default();
         }
+#endif
 
         return configs;
     }

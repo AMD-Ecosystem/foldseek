@@ -19,7 +19,7 @@
 #include "hpc_helpers.h"
 
 // error checking
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || defined(__HIPCC__)
     #define CUERR {                                                            \
         cudaError_t err;                                                       \
         if ((err = cudaGetLastError()) != cudaSuccess) {                       \
@@ -41,43 +41,45 @@
 #define D2D (cudaMemcpyDeviceToDevice)
 
 // cross platform classifiers
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || defined(__HIPCC__)
     #define HOSTDEVICEQUALIFIER  __host__ __device__
 #else
     #define HOSTDEVICEQUALIFIER
 #endif
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || defined(__HIPCC__)
     #define INLINEQUALIFIER  __forceinline__
 #else
     #define INLINEQUALIFIER inline
 #endif
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || defined(__HIPCC__)
     #define GLOBALQUALIFIER  __global__
 #else
     #define GLOBALQUALIFIER
 #endif
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || defined(__HIPCC__)
     #define DEVICEQUALIFIER  __device__
 #else
     #define DEVICEQUALIFIER
 #endif
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || defined(__HIPCC__)
     #define HOSTQUALIFIER  __host__
 #else
     #define HOSTQUALIFIER
 #endif
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || defined(__HIPCC__)
     #define HD_WARNING_DISABLE #pragma hd_warning_disable
 #else
     #define HD_WARNING_DISABLE
 #endif
 
 // redefinition of CUDA atomics for common cstdint types
+// HIP provides these uint64/atomic and ffs overloads natively, so keep this
+// block NVIDIA-only to avoid colliding redefinitions.
 #ifdef __CUDACC__
     // CAS
     DEVICEQUALIFIER INLINEQUALIFIER
@@ -171,6 +173,9 @@
         return __ffsll(x);
     }
 
+#endif // CUDA-only atomics / ffs (HIP supplies these natively)
+
+#if defined(__CUDACC__) || defined(__HIPCC__)
     namespace helpers {
 
         #ifdef __CUDACC_EXTENDED_LAMBDA__
@@ -193,9 +198,13 @@
         DEVICEQUALIFIER INLINEQUALIFIER
         unsigned int lane_id()
         {
+        #ifdef __HIPCC__
+            return __lane_id();
+        #else
             unsigned int lane;
             asm volatile("mov.u32 %0, %%laneid;" : "=r"(lane));
             return lane;
+        #endif
         }
 
         HOSTQUALIFIER INLINEQUALIFIER

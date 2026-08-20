@@ -342,6 +342,13 @@ namespace cudasw4{
 
         std::vector<GaplessKernelConfig> configs;
 
+#ifdef __HIPCC__
+        // AMD reports a compute-capability major of 9 (matching Hopper sm90),
+        // which would otherwise select the DPX kernel config. The DPX 16-bit
+        // SIMD path is NVIDIA-only; use the portable half2 config (dpx=0).
+        (void)ccMajor; (void)ccMinor;
+        configs = getOptimalKernelConfigs_gapless_default();
+#else
         if(ccMajor == 7 && ccMinor == 5){
             configs = getOptimalKernelConfigs_gapless_sm75();
         }else if(ccMajor == 8 && ccMinor == 0){
@@ -359,6 +366,7 @@ namespace cudasw4{
         }else{
             configs = getOptimalKernelConfigs_gapless_default();
         }
+#endif
 
         return configs;
     }
